@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3>Configurar División del Dataset</h3>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                    <div class="alert alert-danger">
+                        <strong>Error en parámetros:</strong> {{ error }}
+                    </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <h5>Información del Dataset:</h5>
+                            <ul>
+                                <li><strong>Filas:</strong> {{ dataset_info.rows }}</li>
+                                <li><strong>Columnas:</strong> {{ dataset_info.columns }}</li>
+                                <li><strong>Columnas categóricas:</strong> 
+                                    {% if dataset_info.categorical_columns %}
+                                        {{ dataset_info.categorical_columns|join:", " }}
+                                    {% else %}
+                                        Ninguna
+                                    {% endif %}
+                                </li>
+                                <li><strong>Columnas numéricas:</strong> 
+                                    {% if dataset_info.numeric_columns %}
+                                        {{ dataset_info.numeric_columns|join:", " }}
+                                    {% else %}
+                                        Ninguna
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        {% if dataset_info_chart %}
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Análisis del Dataset</h6>
+                                <img src="{{ dataset_info_chart }}" alt="Análisis del Dataset" class="img-fluid">
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="test_size" class="form-label">Tamaño del Test Set (%)</label>
+                                <input type="number" class="form-control" id="test_size" name="test_size" 
+                                       value="40" min="1" max="99" step="1" required>
+                                <div class="form-text">Porcentaje para el conjunto de prueba</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="val_size" class="form-label">Tamaño del Validation Set (%)</label>
+                                <input type="number" class="form-control" id="val_size" name="val_size" 
+                                       value="50" min="1" max="99" step="1" required>
+                                <div class="form-text">Porcentaje del test set para validación</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="random_state" class="form-label">Random State</label>
+                                <input type="number" class="form-control" id="random_state" name="random_state" 
+                                       value="42" min="0" required>
+                                <div class="form-text">Semilla para reproducibilidad</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="stratify_column" class="form-label">Columna para Stratify</label>
+                                <select class="form-select" id="stratify_column" name="stratify_column">
+                                    <option value="">Ninguna (sin estratificación)</option>
+                                    {% for column in categorical_columns %}
+                                        <option value="{{ column }}">{{ column }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Mantener distribución de columna categórica</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="shuffle" name="shuffle" checked>
+                        <label class="form-check-label" for="shuffle">Mezclar datos antes de dividir</label>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <small>
+                            <strong>Nota:</strong> La división se realiza en dos pasos:<br>
+                            1. Dataset → Train (60%) + Temporal (40%)<br>
+                            2. Temporal → Validation (20%) + Test (20%)<br>
+                            Resultado final: Train (60%), Validation (20%), Test (20%)
+                        </small>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'upload' %}" class="btn btn-secondary me-md-2">Volver</a>
+                        <button type="submit" class="btn btn-success">Dividir Dataset</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
